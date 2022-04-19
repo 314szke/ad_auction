@@ -37,6 +37,7 @@ class AdAuctionSolver:
         max_product = 0
         max_id = -1
         for buyer_id in item.interested_buyers:
+            if self.buyers[buyer_id].get_value() <= 0: continue
             value = ROUND(self.buyers[buyer_id].bids[item.id] * self.buyers[buyer_id].get_value())
             if value > max_product:
                 max_product = value
@@ -60,14 +61,16 @@ class AdAuctionSolver:
         for item in self.items:
             if item.prediction is None: continue
             buyer_id = self._get_buyer_with_max_bid_budget(item)
-            if buyer_id == -1: continue
 
-            if self.buyers[buyer_id].bids[item.id] < self.buyers[item.prediction].bids[item.id]:
-                self.assignment[buyer_id][item.id] = self.eta
+            if buyer_id == -1:
                 self.assignment[item.prediction][item.id] = ROUND(1 - self.eta)
             else:
-                self.assignment[buyer_id][item.id] = 1
-            self.buyers[buyer_id].update_value(item.id, self.constant)
+                if self.buyers[buyer_id].bids[item.id] < self.buyers[item.prediction].bids[item.id]:
+                    self.assignment[buyer_id][item.id] = self.eta
+                    self.assignment[item.prediction][item.id] = ROUND(1 - self.eta)
+                else:
+                    self.assignment[buyer_id][item.id] = 1
+                self.buyers[buyer_id].update_value(item.id, self.constant)
 
         self._calculate_objective_value()
         return self.objective_value
