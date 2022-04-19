@@ -15,7 +15,15 @@ class InputGenerator:
         return random.randint(self.config.min_budget, self.config.max_budget)
 
 
-    def _get_bid(self):
+    def _get_buyer_ids(self, bidder_weights):
+        num_buyers = random.randint(self.config.min_bidders, self.config.max_bidders)
+        if 'weighted' in self.config.random_type:
+            return random.choices(self.data.buyer_ids, weights=bidder_weights, k=num_buyers)
+        else:
+            return random.sample(self.data.buyer_ids, num_buyers)
+
+
+    def _get_bid(self, buyer_id, item_id):
         if 'lognorm' in self.config.random_type:
             mu = self.config.random_type['lognorm']['mu']
             sigma = self.config.random_type['lognorm']['sigma']
@@ -23,6 +31,12 @@ class InputGenerator:
             while not (self.config.min_bid < bid <= self.config.max_bid):
                 bid = ROUND(random.lognormvariate(mu, sigma))
             return bid
+        elif 'weighted' in self.config.random_type:
+            indices = list(range(len(self.config.random_type['weighted']['P'])))
+            idx = random.choices(indices, weights=self.config.random_type['weighted']['P'], k=1)[0]
+            bid_min_value = ROUND(self.config.random_type['weighted']['min'][idx] * self.data.buyers[buyer_id].budget)
+            bid_max_value = ROUND(self.config.random_type['weighted']['max'][idx] * self.data.buyers[buyer_id].budget)
+            return ROUND(random.uniform(bid_min_value, bid_max_value))
         else:
             ratio = random.random()
             bid = ROUND(self.config.max_bid * ratio)
@@ -30,22 +44,27 @@ class InputGenerator:
             return bid
 
 
-    def _get_buyer_ids(self):
-        num_buyers = random.randint(self.config.min_bidders, self.config.max_bidders)
-        return random.sample(self.data.buyer_ids, num_buyers)
-
-
     def generate(self):
         random.seed(self.config.random_seed)
 
+        total_budget = 0
         for idx in self.data.buyer_ids:
-            self.data.buyers.append(Buyer(idx, self._get_budget()))
+            budget = self._get_budget()
+            self.data.buyers.append(Buyer(idx, budget))
+            total_budget += budget
+
+        bidder_weights = [1 for _ in self.data.buyer_ids]
+        if total_budget != 0:
+            bidder_weights = []
+            for idx in self.data.buyer_ids:
+                ratio = ROUND(self.data.buyers[idx].budget / total_budget)
+                bidder_weights.append(ratio)
 
         for idx in range(self.config.num_items):
-            buyer_ids = self._get_buyer_ids()
+            buyer_ids = self._get_buyer_ids(bidder_weights)
             self.data.items.append(Item(idx, buyer_ids))
             for buyer_id in buyer_ids:
-                bid = self._get_bid()
+                bid = self._get_bid(buyer_id, idx)
                 self.data.buyers[buyer_id].wanted_item_ids.append(idx)
                 self.data.buyers[buyer_id].bids[idx] = bid
                 self.data.buyers[buyer_id].potential_expense = ROUND(self.data.buyers[buyer_id].potential_expense + bid)
