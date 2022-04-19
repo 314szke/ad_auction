@@ -16,7 +16,7 @@ def include_prediction(data, error_rate, optimal_solution):
                 # Impose error in the prediction but keep it feasible
                 if random.random() < error_rate:
                     if len(data.items[item_id].interested_buyers) == 1:
-                        if (spent[buyer_id] + data.buyers[buyer_id].bids[item_id]) <= data.buyers[buyer_id].allowed_budget:
+                        if (spent[buyer_id] + data.buyers[buyer_id].bids[item_id]) <= data.buyers[buyer_id].budget:
                             data.items[item_id].prediction = buyer_id
                             spent[buyer_id] += data.buyers[buyer_id].bids[item_id]
                         else:
@@ -24,7 +24,7 @@ def include_prediction(data, error_rate, optimal_solution):
                     else:
                         remaining_buyers = []
                         for idx in set(data.items[item_id].interested_buyers).difference(set([buyer_id])):
-                            if (spent[idx] + data.buyers[idx].bids[item_id]) <= data.buyers[idx].allowed_budget:
+                            if (spent[idx] + data.buyers[idx].bids[item_id]) <= data.buyers[idx].budget:
                                 remaining_buyers.append(idx)
 
                         if remaining_buyers != []:
@@ -35,7 +35,7 @@ def include_prediction(data, error_rate, optimal_solution):
                         number_of_modifications += 1
 
                 else: # The prediction is the optimal solution
-                    if (spent[buyer_id] + data.buyers[buyer_id].bids[item_id]) <= data.buyers[buyer_id].allowed_budget:
+                    if (spent[buyer_id] + data.buyers[buyer_id].bids[item_id]) <= data.buyers[buyer_id].budget:
                         data.items[item_id].prediction = buyer_id
                         spent[buyer_id] += data.buyers[buyer_id].bids[item_id]
                     else:
