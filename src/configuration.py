@@ -47,5 +47,6 @@ WEIGHTED_PARAMETER_1 = {
 CONFIGS = {
     0: ProblemConfiguration(10, 10, 10, 100, 1, 3, 1, 10, {}, 42),
     1: ProblemConfiguration(100, 10_000, 10, 0, 6, 6, 0, 10, LOGNORM_PARAMETER_1 , 0),
-    2: ProblemConfiguration(100, 100_000, 10, 100, 1, 5, 0, 0, WEIGHTED_PARAMETER_1, 1976)
+    2: ProblemConfiguration(100, 100_000, 10, 100, 1, 5, 0, 0, WEIGHTED_PARAMETER_1, 1976),
+    3: ProblemConfiguration(100, 10_000, 20, 150, 3, 10, 1, 20, {}, 7788)
 }

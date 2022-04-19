@@ -59,15 +59,18 @@ class AdAuctionSolver:
         self._init_solver()
 
         for item in self.items:
-            if item.prediction is None: continue
             buyer_id = self._get_buyer_with_max_bid_budget(item)
 
             if buyer_id == -1:
-                self.assignment[item.prediction][item.id] = ROUND(1 - self.eta)
-            else:
-                if self.buyers[buyer_id].bids[item.id] < self.buyers[item.prediction].bids[item.id]:
-                    self.assignment[buyer_id][item.id] = self.eta
+                if item.prediction is not None:
                     self.assignment[item.prediction][item.id] = ROUND(1 - self.eta)
+            else:
+                if item.prediction is not None:
+                    if self.buyers[buyer_id].bids[item.id] < self.buyers[item.prediction].bids[item.id]:
+                        self.assignment[buyer_id][item.id] = self.eta
+                        self.assignment[item.prediction][item.id] = ROUND(1 - self.eta)
+                    else:
+                        self.assignment[buyer_id][item.id] = 1
                 else:
                     self.assignment[buyer_id][item.id] = 1
                 self.buyers[buyer_id].update_value(item.id, self.constant)
